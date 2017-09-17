@@ -14,11 +14,11 @@ import java.net.Socket;
  *
  * @author Lucas Franca
  */
-public class Requester implements Runnable{
+public class ReportRequester implements Runnable{
     
     private Socket clientSocket;
     
-    public Requester(String serverAddress, int serverPort) {
+    public ReportRequester(String serverAddress, int serverPort) {
         
         try {
             clientSocket = new Socket(serverAddress, serverPort);
