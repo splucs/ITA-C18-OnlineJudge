@@ -142,6 +142,7 @@ public class Server implements Runnable{
             serverSocket = new ServerSocket(serverPort);
         } catch (Exception e) {
             System.out.println("[SERVER] Exception: " + e.getMessage());
+            return;
         }
         System.out.println("[SERVER] Server online");
         

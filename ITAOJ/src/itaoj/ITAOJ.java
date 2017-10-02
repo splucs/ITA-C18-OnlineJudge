@@ -33,11 +33,6 @@ public class ITAOJ {
     }
 
     public static void main(String[] args) {
-
-        for(int i=0; i<args.length; i++) {
-            System.out.print(args[i] + " ");
-        }
-        System.out.print("\n");
         
         if (args.length < 1) {
             printWrongFormatMesage();
@@ -78,7 +73,7 @@ public class ITAOJ {
         //submit localhost 2374 "..\dummy.cpp" 1001
         //report localhost 2374 0
         
-        
+        /*
         //  DEBUG
         //dummy submit
         Thread submit = new Thread(new Submitter(args[1], Integer.parseInt(args[2]), "..\\dummy.cpp", 1001));
@@ -92,7 +87,7 @@ public class ITAOJ {
         
         //dummy report
         Thread report = new Thread(new ReportRequester(args[1], Integer.parseInt(args[2]), 0));
-        report.start();
+        report.start();*/
         
     }
     

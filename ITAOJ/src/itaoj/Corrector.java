@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -43,6 +44,8 @@ public class Corrector implements Runnable{
     private String stdin;
     private String stdout;
     private String stderr;
+    private int returnValue;
+    private boolean timeLimitExceeded;
     
     public Corrector(Server _server, int _submitPort, int _submissionId) {
         server = _server;
@@ -86,6 +89,9 @@ public class Corrector implements Runnable{
         stdOutput.flush();
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
         BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+        
+        timeLimitExceeded = !process.waitFor(1000, TimeUnit.MILLISECONDS);
+        if(!timeLimitExceeded) returnValue = process.exitValue();
 
         //Read standard output
         String s;
@@ -122,7 +128,7 @@ public class Corrector implements Runnable{
         
         //Compile
         System.out.println(CorrectorTag + " Compiling code");
-        ExecWindowsCommand("g++ \"" + filePath + ".cpp\"" + " -o \"" + filePath + '\"');
+        ExecWindowsCommand("g++ \"" + filePath + ".cpp\"" + " -O2 -o \"" + filePath + '\"');
         if(stdout.length() > 3 || stderr.length() > 3) {
             verdict = "COMPILATION ERROR";
             return;
@@ -135,7 +141,12 @@ public class Corrector implements Runnable{
             stdin = readTxt(testPath + "in" + test + ".txt");
             String correctOut = readTxt(testPath + "out" + test + ".txt");
             ExecWindowsCommand('\"' + filePath + ".exe\"");
-            if (stderr.length() > 0) {
+            if (timeLimitExceeded) {
+                verdict = "TIME LIMIT EXCEEDED";
+                System.out.println(CorrectorTag + " TLE");
+                return;
+            }
+            if (stderr.length() > 0 || returnValue != 0) {
                 verdict = "RUNTIME ERROR";
                 System.out.println(CorrectorTag + " RTE, stderr: " + stderr);
                 return;
@@ -193,8 +204,10 @@ public class Corrector implements Runnable{
             
             //Corrects the solution
             submitSocket.setSoTimeout(ITAOJ.CORRECTION_TIMEOUT);
+            connectionSocket.setSoTimeout(ITAOJ.CORRECTION_TIMEOUT);
             correct();
             submitSocket.setSoTimeout(ITAOJ.SOCKET_TIMEOUT);
+            connectionSocket.setSoTimeout(ITAOJ.SOCKET_TIMEOUT);
             
             //Sends RemReq
             outToClient.writeBytes(ITAOJ.REMAINDER_REQ + "\n");
@@ -212,6 +225,7 @@ public class Corrector implements Runnable{
             //Close code submit request communication
             outToClient.close();
             inFromClient.close();
+            connectionSocket.close();
             submitSocket.close();
             
         } catch (Exception e) {
